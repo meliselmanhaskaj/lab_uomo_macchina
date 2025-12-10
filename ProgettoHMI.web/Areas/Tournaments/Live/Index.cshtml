@@ -1,0 +1,247 @@
+@model ProgettoHMI.web.Areas.Tournaments.Live.IndexViewModel
+
+@{
+	ViewData["Title"] = "Index";
+}
+
+<div class="container-fluid bg-secondary position-relative min-vh-100" :class="popUpTournament != null ? 'more-height' : ''">
+	<div class="position-absolute d-flex align-items-center" style="top: 10px; left: 13px;">
+		<span class="text-danger fw-bold fs-5">LIVE</span>
+		<div class="ms-2 live-dot p-2"></div>
+	</div>
+    <h1 class="text-center pt-5 pb-4">Guarda tutti i tornei Live</h1>
+	<a v-if="filtersCount > 0" class="ms-md-4 ms-2 mb-4" type="button" style="color: red;" @@click="resetFilters(); performTournamentReq()">Azzera Filtri</a>
+	<span v-else class="ms-md-4 ms-2 mb-4" type="button" style="visibility: hidden;">palceholder</span>
+    <div class="row">
+        <div class="row">
+			<div class="col-1"></div>
+			<div class="dropdown tournament-md-filter col-3">
+				<button class="btn btn-secondary dropdown-toggle bg-primary px-3" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+					Città
+					<span class="badge bg-light text-dark mx-1">{{ selectedCities.length > 0 ? selectedCities.length : "" }}</span>
+				</button>
+				<ul class="dropdown-menu tournament-dropdown-menu" aria-labelledby="dropdownMenuButton1">
+					<template v-for="city in cities">
+						<li>
+							<button class="dropdown-item ps-4 py-2 border-bottom" type="button" @@click="handleCityOnClick(city)">
+								<div class="form-check">
+									<input class="form-check-input fs-5" type="checkbox" v-model="city.selected" />
+									<label class="form-check-label fs-5">{{ city.value }}</label>
+								</div>
+							</button>
+						</li>
+					</template>
+				</ul>
+			</div>
+
+			<div class="col-3 tournament-filter">
+				<button class="btn btn-secondary dropdown-toggle bg-primary px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottomCity" aria-controls="offcanvasBottom">
+					Città
+					<span class="badge bg-light text-dark mx-1">{{ selectedCities.length > 0 ? selectedCities.length : "" }}</span>
+				</button>
+			</div>
+			<div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottomCity" aria-labelledby="offcanvasBottomLabelCity">
+				<div class="offcanvas-header">
+					<h5 class="offcanvas-title" id="offcanvasBottomLabelCity">Seleziona una o più città</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+				</div>
+
+				<ul style="padding-left: 0px; overflow-y: auto;">
+					<template v-for="city in cities">
+						<li style="list-style-type: none;">
+							<button class="btn btn-secondary dropdown-item rounded-0 w-100 text-start border-bottom" type="button" @@click="handleCityOnClick(city)" style="padding-left: 40px;">
+								<div class="form-check my-3">
+									<input class="form-check-input fs-2" type="checkbox" v-model="city.selected" />
+									<label class="form-check-label fs-2">{{ city.value }}</label>
+								</div>
+							</button>
+						</li>
+					</template>
+				</ul>
+			</div>
+
+			<div class="col-1"></div>
+			<div class="dropdown tournament-md-filter col-3">
+				<button class="btn btn-secondary dropdown-toggle bg-primary px-3" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+					Rank
+					<span class="badge bg-light text-dark mx-1">{{ selectedRanks.length > 0 ? selectedRanks.length : "" }}</span>
+				</button>
+				<ul class="dropdown-menu tournament-dropdown-menu" aria-labelledby="dropdownMenuButton1">
+					<template v-for="rank in ranks">
+						<li>
+							<button class="dropdown-item ps-4 py-2 border-bottom" type="button" @@click="handleRankOnClick(rank)">
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" v-model="rank.selected" />
+									<label class="form-check-label">{{ rank.label }}</label>
+								</div>
+							</button>
+						</li>
+					</template>
+				</ul>
+			</div>
+			
+			<div class="col-3 tournament-filter">
+				<button class="btn btn-secondary dropdown-toggle bg-primary px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottomRank" aria-controls="offcanvasBottom">
+					Rank
+					<span class="badge bg-light text-dark mx-1">{{ selectedRanks.length > 0 ? selectedRanks.length : "" }}</span>
+				</button>
+			</div>
+			<div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottomRank" aria-labelledby="offcanvasBottomLabelRank">
+				<div class="offcanvas-header">
+					<h5 class="offcanvas-title" id="offcanvasBottomLabelRank">Seleziona uno o più rank</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+				</div>
+				<div class="offcanvas-body small">
+					<ul style="padding-left: 0px; overflow-y: auto;">
+						<template v-for="rank in ranks">
+							<li style="list-style-type: none;">
+								<button class="btn btn-secondary dropdown-item rounded-0 w-100 text-start border-bottom" type="button" @@click="handleRankOnClick(rank)" style="padding-left: 40px;">
+									<div class="form-check my-3">
+										<input class="form-check-input fs-2" type="checkbox" v-model="rank.selected" />
+										<label class="form-check-label fs-2">{{ rank.label }}</label>
+									</div>
+								</button>
+							</li>
+						</template>
+					</ul>
+				</div>
+			</div>
+
+			<div class="col-1"></div>
+			<div class="dropdown col-3" style="display: inline;">
+				<button class="btn btn-secondary dropdown-toggle bg-primary px-3" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+					Data
+					<span class="badge bg-light text-dark mx-1">{{ startDate != null ? 1 : "" }}</span>
+				</button>
+				<div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+					<form class="m-3">
+						<label for="start">Seleziona la data di inizio</label>
+						<input type="date" id="start" name="start" v-model="startDate" @@change="handleStartDateChange()">
+					</form>
+				</div>
+			</div>
+		</div>
+    </div>
+	<div class="pt-5"></div>
+
+	<div class="row">
+		<template v-for="(data, index) in showTournamentLst">
+			<div class="col-12 col-md-6 col-lg-4 mb-4" style="position: relative;">
+				<div :class="popUpTournament == data.id ? 'popUpDesktop' : '' " style="z-index: 10;">
+				<div class="container-fluid py-4 rounded-4 tournamentCard" :class="popUpTournament == data.id ? 'bg-primary' : 'bg-white'" :style="popUpTournament == data.id ? cardWidth : ''">
+					<div class="row">
+						<div class="col-2">
+							<img :src="'/images/' + data.imgRank" alt="icona rank" />
+						</div>
+						<div class="col-7">
+							<div class="pb-2"></div>
+							<a :href="`${drawUrl}?TournamentId=${data.id}`" class="h5">{{ data.name }}</a>
+						</div>
+						<div class="col-3">
+							<button v-if="popUpTournament != data.id" class="btn btn-primary" @@click="performeGamesReq(data.id)">
+								<img src="~/images/arrow-down.svg" alt="fraccia in giù" />
+							</button>
+							<button v-else class="btn btn-primary" @@click="performeGamesReq(data.id)">
+								<img src="~/images/arrow-up.svg" alt="fraccia in su" />
+							</button>
+						</div>
+					</div>
+					<div v-if ="popUpTournament == data.id" id="dropDown" >
+						<div class="text-center pt-5 fw-bolder fs-5" v-if="model.games.length == 0">
+							Nessuna partita Live.<br>Torna più tardi!
+						</div>
+						<section class="mt-5">
+							<div class="cards-container">
+								<div class="m-auto tennis-card d-flex align-items-center bg-white rounded-4 p-3 py-4 mt-3 position-relative" style="max-width: 650px;" v-for="game in model.games">
+									<!-- Colonna sinistra: nomi e separatore -->
+									<div class="col-name d-flex flex-column justify-content-center">
+										<div class="d-flex align-items-center mb-3 ms-1">
+											<img :src="'/images/' + game.player1.rank.imgRank" class="player-icon" />
+											<span class="ms-2">{{ game.player1.name }}</span>
+										</div>
+
+										<hr class="separator my-1" />
+
+										<div class="d-flex align-items-center mt-3 ms-1">
+											<img :src="'/images/' + game.player2.rank.imgRank" class="player-icon" />
+											<span class="ms-2">{{ game.player2.name }}</span>
+										</div>
+									</div>
+
+									<!-- Colonna destra: punteggi -->
+									<div class="col-points d-flex justify-content-center gap-3 gap-sm-3 gap-md-3" style=" height: 115px; flex: 1;">
+										<div v-for="(set, index) in game.score.set"
+											:key="index"
+											class="score-box d-flex flex-column justify-content-between align-items-center rounded text-center h-100">
+											<div class="score-player" v-bind:class="{'fw-bold': ( set.score1 > set.score2 )}">{{ set.score1 }}</div>
+											<div class="set-label">{{ index + 1 }}</div> 
+											<div class="score-player" v-bind:class="{'fw-bold': ( set.score2 > set.score1 )}">{{ set.score2 }}</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</section>
+						<div class="text-center pt-3" v-if="model.games.length > 0">
+							<a :href="`${drawUrl}?TournamentId=${data.id}`" style="color: black;" class="mx-auto">Vai al Tabellone</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			</div>
+		</template>
+	</div>
+	<div class="alert alert-warning mt-3 text-center" v-if="model.tournaments.length == 0">Nessun torneo disponibile</div>
+</div>
+
+@section styles {
+	<style>
+		#dropDown {
+			overflow-y: auto;
+			max-height: 450px;
+		}
+
+		.more-height {
+			height: 120vh !important;
+		}
+
+		.popUpDesktop {
+			position: none;
+		}
+
+		@@media (min-width: 768px) {
+			.popUpDesktop {
+				position: absolute;
+			}
+		}
+	</style>
+}
+
+@section scripts {
+	<script src="~/js/bundle-vue.js" asp-append-version="true"></script>
+	<script src="~/Areas/Tournaments/Live/Index.js" asp-append-version="true"></script>
+
+	<script type="application/json" id="Seed_JSON">
+		@Html.Raw(Model.ToJson())
+	</script>
+	
+	<script type="text/javascript">
+		var viewModel = new Tournaments.Live.indexViewModel(JSON.parse(document.getElementById("Seed_JSON").innerText), "@Model.UrlRaw")
+
+		var vueModel = new Vue({
+			el: '#pageId',
+			data: viewModel,
+			mounted() {
+				this.$nextTick(() => {
+					const element = document.querySelector('body');
+
+					const resizeObserver = new ResizeObserver(entries => {
+						const width = document.querySelector(".tournamentCard").clientWidth
+						this._data.cardWidth = `width: ${width}px;`
+					});
+
+					resizeObserver.observe(element);
+				})
+			}
+		});
+	</script>
+}

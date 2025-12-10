@@ -1,0 +1,124 @@
+﻿.home-rank-icon {
+    width: 15%;
+    margin-left: 45%;
+    margin-bottom: 10%;
+}
+
+@media (min-width: 567px) {
+    .logo-home {
+        width: 50px;
+        height: 50px;
+    }
+
+    .home-rank-icon {
+        width: 12%;
+        margin-bottom: 10%;
+        margin-left: 50%;
+    }
+
+    .tournament-filter {
+        display: none;
+    }
+
+    .tournament-md-filter {
+        display: inline-block !important;
+    }
+}
+
+.tournament-dropdown-menu {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.offcanvas-bottom {
+    height: 80% !important;
+}
+
+.tournament-md-filter {
+    display: none;
+}
+
+.home-tournament-date {
+    margin-bottom: 5px;
+}
+
+#home-header {
+    background-color: #729d9d;
+    background-image: linear-gradient(#729d9d, #BAC9C9);
+}
+
+
+.fs-p-register {
+    font-size: 13px;
+}
+
+/* REGISTER */
+#card-register {
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.selected-register {
+    background-color: #A3A0A0 !important;
+    transform: scale(0.95);
+}
+/* --REGISTER-- */
+
+.btn-sel-draw {
+    background-color: #CACACA;
+}
+
+.selected-draw {
+    background-color: #CACACA !important;
+    border: 4px solid #E99700 !important;
+}
+
+.live-dot {
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0.6;
+    }
+}
+
+
+.card-reward {
+    border-radius: 15px;
+    padding: 1rem;
+    background-color: #f2f2f2;
+    border: none;
+}
+
+.card-reward img {
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.card-reward .title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-top: 0.8rem;
+}
+
+.card-reward .status {
+    font-weight: 600;
+}
+
+.card-disabled {
+    opacity: 0.4;
+}
+
+.text-orange {
+    color: #f1a300;
+}

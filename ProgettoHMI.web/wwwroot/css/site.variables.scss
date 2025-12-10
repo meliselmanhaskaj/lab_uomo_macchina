@@ -1,0 +1,15 @@
+﻿$white: #FFFFFF;
+$black: #000000;
+
+$tablet: 568px;
+
+$primary: #729D9D;
+$secondary: #E1E1E1;
+$btn-primary: #E99700;
+$btn-prim-hover-bg: #C27E00;
+$btn-secondary: #E1E1E1;
+$btn-sec-hover-bg: #C2C2C2;
+
+// Used to be able to edit values of bootstrap scss and css variables
+@import "../../node_modules/bootstrap/scss/_functions";
+@import "../../node_modules/bootstrap/scss/_variables";
