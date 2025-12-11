@@ -48,6 +48,7 @@ var Tournaments;
                     this.startDate = null;
                     this.endDate = null;
                     this.filtersCount = 0;
+                    try { this.updateUrlWithFilters(); } catch (e) { }
                 };
                 /* -------- Tournaments -------- */
                 this.getTournaments = async (filters) => {
@@ -68,6 +69,8 @@ var Tournaments;
                     }
                 };
                 this.performTournamentReq = () => {
+                    // update URL immediately so bookmarks reflect current filters
+                    try { this.updateUrlWithFilters(); } catch (e) { }
                     let data = {
                         city: this.selectedCities,
                         rank: this.selectedRanks,
@@ -173,11 +176,104 @@ var Tournaments;
                         this.popUpTournament = null;
                     this.getGames(tournamentId);
                 };
+
+                // Update URL with current filters and save to localStorage
+                this.updateUrlWithFilters = () => {
+                    try {
+                        const params = new URLSearchParams();
+                        if (this.selectedCities && this.selectedCities.length > 0) {
+                            params.set('cities', this.selectedCities.join(','));
+                        }
+                        if (this.selectedRanks && this.selectedRanks.length > 0) {
+                            params.set('ranks', this.selectedRanks.join(','));
+                        }
+                        if (this.startDate) {
+                            let dateStr = (this.startDate instanceof Date) ? this.startDate.toISOString().split('T')[0] : this.startDate;
+                            params.set('startDate', dateStr);
+                        }
+                        const qs = params.toString();
+                        const newUrl = window.location.pathname + (qs ? '?' + qs : '');
+                        // pushState so bookmark will include it
+                        window.history.pushState(null, '', newUrl);
+                        try { localStorage.setItem('tournaments_live_filters', qs); } catch (e) { }
+                        ;
+                    }
+                    catch (e) {
+                        ;
+                    }
+                };
+
+                // Load filters from URL or fallback to localStorage
+                this.loadFiltersFromUrl = () => {
+                    try {
+                        const paramsFromLocation = new URLSearchParams(window.location.search);
+                        let params = paramsFromLocation;
+                        if (!paramsFromLocation.toString()) {
+                            try {
+                                const saved = localStorage.getItem('tournaments_live_filters');
+                                if (saved) {
+                                    params = new URLSearchParams(saved);
+                                    const newUrl = window.location.pathname + (saved ? '?' + saved : '');
+                                    window.history.replaceState(null, '', newUrl);
+                                }
+                            }
+                            catch (e) { }
+                        }
+
+                        ;
+
+                        const citiesParam = params.get('cities');
+                        if (citiesParam) {
+                            const citiesArray = citiesParam.split(',');
+                            citiesArray.forEach(city => {
+                                const cityObj = this.cities.find(c => c.value === city);
+                                if (cityObj) {
+                                    cityObj.selected = true;
+                                    this.selectedCities.push(city);
+                                    this.filtersCount++;
+                                }
+                            });
+                        }
+                        const ranksParam = params.get('ranks');
+                        if (ranksParam) {
+                            const ranksArray = ranksParam.split(',').map(r => Number(r));
+                            ranksArray.forEach(rank => {
+                                const rankObj = this.ranks.find(r => Number(r.value) === rank);
+                                if (rankObj) {
+                                    rankObj.selected = true;
+                                    this.selectedRanks.push(rank);
+                                    this.filtersCount++;
+                                }
+                            });
+                        }
+                        const dateParam = params.get('startDate');
+                        if (dateParam) {
+                            this.startDate = dateParam;
+                            this.endDate = new Date(dateParam);
+                            this.endDate.setDate(this.endDate.getDate() + 90);
+                            this.filtersCount++;
+                        }
+
+                        ;
+
+                        if (this.filtersCount > 0) {
+                            const data = { city: this.selectedCities, rank: this.selectedRanks, startDate: this.startDate, endDate: this.endDate, status: 1 };
+                            this.getTournaments(data);
+                        }
+                    }
+                    catch (e) {
+                        ;
+                    }
+                };
                 this.model = model;
                 this.model.games = [];
                 this.initCities();
                 this.initRanks();
-                this.initShowTournament();
+                // try to restore filters from URL or localStorage; if none, initialize show list
+                try { this.loadFiltersFromUrl(); } catch (e) { }
+                if (this.filtersCount === 0) {
+                    this.initShowTournament();
+                }
                 this.drawUrl = drawUrl;
             }
         }

@@ -18,6 +18,14 @@
                     <button class="btn btn-custom btn-outline-primary w-100" v-on:click="selectedSection = 2" v-bind:class="{ 'active' : selectedSection == 2 }">Tornei</button>
                     <button class="btn btn-custom btn-outline-primary w-100" v-on:click="selectedSection = 3" v-bind:class="{ 'active' : selectedSection == 3 }">Premi</button>
                 </div>
+                @if (ViewData["isLogin"] as bool? ?? false)
+                {
+                    <div class="mt-3 d-flex justify-content-center">
+                        <form asp-area="" asp-action="Logout" asp-controller="Login" method="post">
+                            <button type="submit" class="btn btn-secondary w-100">LOGOUT</button>
+                        </form>
+                    </div>
+                }
                 
             </div>
         </div>
@@ -182,7 +190,7 @@
                 <div class="section-box" v-bind:class="{ 'active' : selectedSection == 3 }" id="section-awards">
                     <div class="container-fluid border-custom ">
                         <h2 class="text-center">Il tuo Premi</h2>
-                        <div class="container py-4 max-height">
+                        <div class="container py-4">
                             <div class="row g-3">
 
                                 <!-- Card 1 -->
@@ -263,6 +271,53 @@
         new Vue({
             el: '#pageId',
             data: profileModel,
+            created: function() {
+                var savedSection = localStorage.getItem('profile:selectedSection');
+                if (savedSection !== null) {
+                    this.selectedSection = parseInt(savedSection);
+                }
+
+                var savedFilter = localStorage.getItem('profile:selectedFilter');
+                if (savedFilter !== null) {
+                    this.selectedFilter = savedFilter;
+                }
+
+                var savedSort = localStorage.getItem('profile:sortOrder');
+                if (savedSort !== null) {
+                    this.sortOrder = savedSort;
+                }
+
+                var savedStatus = localStorage.getItem('profile:statusFilter');
+                if (savedStatus !== null) {
+                    this.statusFilter = savedStatus;
+                }
+
+                var savedToShow = localStorage.getItem('profile:tournamentsToShow');
+                if (savedToShow !== null) {
+                    var n = parseInt(savedToShow);
+                    if (!isNaN(n)) this.tournamentsToShow = n;
+                }
+            },
+            watch: {
+                selectedSection: function (newVal) {
+                    localStorage.setItem('profile:selectedSection', newVal);
+                },
+                selectedFilter: function (newVal) {
+                    localStorage.setItem('profile:selectedFilter', newVal);
+                    // when filter changes, reset shown count to first page
+                    this.tournamentsToShow = 4;
+                    localStorage.setItem('profile:tournamentsToShow', 4);
+                },
+                sortOrder: function (newVal) {
+                    localStorage.setItem('profile:sortOrder', newVal);
+                },
+                statusFilter: function (newVal) {
+                    localStorage.setItem('profile:statusFilter', newVal);
+                },
+                tournamentsToShow: function (newVal) {
+                    localStorage.setItem('profile:tournamentsToShow', newVal);
+                }
+            }
         });
     </script>
 }
@@ -282,7 +337,7 @@
             }
 
             .section-box {
-                height: 680px;
+                min-height: 680px;
             }
 
             .reward-img {

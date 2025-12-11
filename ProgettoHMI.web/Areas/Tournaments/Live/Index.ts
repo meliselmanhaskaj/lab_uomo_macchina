@@ -20,10 +20,124 @@ module Tournaments.Live {
 
             this.initCities()
             this.initRanks()
-            this.initShowTournament()
-
             this.drawUrl = drawUrl
 
+            // Load filters from URL AFTER initializing cities/ranks
+            // This must be done synchronously before Vue mounts
+            this.loadFiltersFromUrl()
+            
+            // Initialize tournament list if no filters were applied
+            if (this.filtersCount === 0) {
+                this.initShowTournament()
+            }
+        }
+
+        private loadFiltersFromUrl = () => {
+            // Try to load filters from URL. If empty, fallback to localStorage (so bookmarks and reopen work).
+            const paramsFromLocation = new URLSearchParams(window.location.search);
+            let params = paramsFromLocation;
+
+            // If no query params present, try localStorage fallback
+            if (!paramsFromLocation.toString()) {
+                try {
+                    const saved = localStorage.getItem('tournaments_live_filters');
+                    if (saved) {
+                        params = new URLSearchParams(saved);
+                        // reflect saved filters into address bar so bookmarking shows them
+                        const newUrl = window.location.pathname + (saved ? '?' + saved : '');
+                        window.history.replaceState(null, '', newUrl);
+                    }
+                } catch (e) {
+                    // ignore storage errors
+                }
+            }
+
+            
+            
+            // Load cities
+            const citiesParam = params.get('cities');
+            if (citiesParam) {
+                const citiesArray = citiesParam.split(',');
+                citiesArray.forEach(city => {
+                    const cityObj = this.cities.find(c => c.value === city);
+                    if (cityObj) {
+                        cityObj.selected = true;
+                        this.selectedCities.push(city);
+                        this.filtersCount++;
+                    }
+                });
+            }
+
+            // Load ranks
+            const ranksParam = params.get('ranks');
+            if (ranksParam) {
+                const ranksArray = ranksParam.split(',').map(r => Number(r));
+                ranksArray.forEach(rank => {
+                    const rankObj = this.ranks.find(r => Number(r.value) === rank);
+                    if (rankObj) {
+                        rankObj.selected = true;
+                        this.selectedRanks.push(rank);
+                        this.filtersCount++;
+                    }
+                });
+            }
+
+            // Load date
+            const dateParam = params.get('startDate');
+            if (dateParam) {
+                this.startDate = dateParam as any;
+                const dateObj = new Date(dateParam);
+                this.endDate = new Date(dateObj);
+                this.endDate.setDate(this.endDate.getDate() + 90);
+                this.filtersCount++;
+            }
+
+            
+            
+            // Fetch tournaments with filters if any exist (without updating URL again)
+            if (this.filtersCount > 0) {
+                let data = <Live.Server.TournamentsFilterQueryViewModelInterface>{
+                    city: this.selectedCities,
+                    rank: this.selectedRanks,
+                    startDate: this.startDate,
+                    endDate: this.endDate,
+                    status: 1
+                }
+                this.getTournaments(data);
+            }
+        }
+
+        private updateUrlWithFilters = () => {
+            const params = new URLSearchParams();
+            
+            if (this.selectedCities.length > 0) {
+                params.set('cities', this.selectedCities.join(','));
+            }
+            
+            if (this.selectedRanks.length > 0) {
+                params.set('ranks', this.selectedRanks.join(','));
+            }
+            
+            if (this.startDate) {
+                let dateStr: string;
+                if (this.startDate instanceof Date) {
+                    dateStr = this.startDate.toISOString().split('T')[0];
+                } else {
+                    dateStr = this.startDate;
+                }
+                params.set('startDate', dateStr);
+            }
+
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            // Use pushState so the URL is immediately visible for bookmarking
+            window.history.pushState(null, '', newUrl);
+            // Save a copy in localStorage as fallback for bookmarking/navigation where querystring may be lost
+            try {
+                localStorage.setItem('tournaments_live_filters', params.toString());
+            } catch (e) {
+                // ignore
+            }
+            
         }
 
         private initCities = () => {
@@ -66,6 +180,7 @@ module Tournaments.Live {
             this.startDate = null
             this.endDate = null
             this.filtersCount = 0
+            this.updateUrlWithFilters()
         }
 
         /* -------- Tournaments -------- */
@@ -88,6 +203,9 @@ module Tournaments.Live {
         }
 
         public performTournamentReq = () => {
+            // Update URL FIRST before making request
+            this.updateUrlWithFilters();
+            
             let data = <Live.Server.TournamentsFilterQueryViewModelInterface>{
                 city: this.selectedCities,
                 rank: this.selectedRanks,
